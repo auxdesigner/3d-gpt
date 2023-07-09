@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Random Three.js Actions</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+      button {
+        margin: 2em auto;
+        display: block;
+        border: 6px solid rgba(255, 255, 255, 0.45);
+        border-radius: 50px;
+        -webkit-appearance: none;
+        padding: 1em;
+        background-repeat: no-repeat;
+        background-size: 100%;
+        background-clip: padding-box;
+        position: absolute;
+        color: #fff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        left: 50%;
+        transform: translate(-50%, 0);
+        font-size: 18px;
+        width: 220px;
+        z-index: 3;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      button:active {
+        top: 1px;
+      }
+      button:before {
+        content: "";
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        border-radius: 50px;
+        z-index: -1;
+        filter: blur(14px);
+      }
+
+      button:after {
+        content: "";
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        border-radius: 50px;
+        z-index: -1;
+        filter: blur(14px);
+      }
+
+      .button1 {
+        background-image: linear-gradient(90deg, #7b81ec, #3bd1d3);
+      }
+
+      .button1:before {
+        background-image: linear-gradient(90deg, #7b81ec, transparent);
+      }
+
+      .button1:after {
+        background-image: linear-gradient(90deg, transparent, #3bd1d3);
+      }
+      .loading {
+        display: block;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0);
+        padding: 10px;
+        top: 58px;
+        border-radius: 5px;
+        z-index: 2;
+      }
+
+      .loading-dot {
+        float: left;
+        width: 8px;
+        height: 8px;
+        margin: 0 4px;
+        background: #aaa;
+        border-radius: 50%;
+        opacity: 0;
+        animation: loadingFade 1s infinite;
+      }
+
+      .loading-dot:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .loading-dot:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+
+      .loading-dot:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+
+      @keyframes loadingFade {
+        0% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 0.8;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button id="randomButton" class="button1">Surprise Me</button>
+    <div class="loading">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js"></script>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script>
+      // Create a scene
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
+
+      // Create a camera
+      const fov = 45;
+      const aspect = innerWidth / innerHeight; // the canvas default
+      const near = 0.1;
+      const far = 1000;
+      const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      camera.position.z = 10;
+
+      // Create a cube
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshNormalMaterial();
+      const cube = new THREE.Mesh(geometry, material);
+      cube.rotation.set(0.5, 0.75, 0);
+      scene.add(cube);
+
+      // Create a renderer
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a button
+      const button = document.getElementById("randomButton");
+
+      // Add event listener to the button
+      button.addEventListener("click", sendToGPT);
+
+      // Function to perform a random action on the cube
+      function randomAction(randomX, randomY, randomZ) {
+        const random = Math.floor(Math.random() * 3);
+
+        switch (random) {
+          case 0:
+            tweenAnimate(cube.position, randomX, randomY, randomZ);
+            break;
+          case 1:
+            tweenAnimate(cube.scale, randomX, randomY, randomZ);
+            break;
+          case 2:
+            tweenAnimate(cube.rotation, randomX, randomY, randomZ);
+            break;
+          default:
+            break;
+        }
+      }
+
+      // Tween
+      function tweenAnimate(attr, randomX, randomY, randomZ) {
+        new TWEEN.Tween(attr)
+          .to({ x: randomX, y: randomY, z: randomZ }, 1000)
+          .easing(TWEEN.Easing.Quadratic.Out)
+          .start();
+      }
+
+      // Render the scene
+      function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+        TWEEN.update();
+      }
+      animate();
+
+      // GPT
+      var OPENAI_API_KEY = "YOUR_KEY";
+
+      function sendToGPT(id, query) {
+        button.style.visibility = "hidden";
+
+        var sQuestion =
+          "Write a line of code 'randomAction(x, y, z)', where x, y, z can be a random number.";
+
+        var oHttp = new XMLHttpRequest();
+        oHttp.open("POST", "https://api.openai.com/v1/completions");
+        oHttp.setRequestHeader("Accept", "application/json");
+        oHttp.setRequestHeader("Content-Type", "application/json");
+        oHttp.setRequestHeader("Authorization", "Bearer " + OPENAI_API_KEY);
+
+        oHttp.onreadystatechange = function () {
+          if (oHttp.readyState === 4) {
+            var oJson = {};
+            var outputMsg;
+            try {
+              oJson = JSON.parse(oHttp.responseText);
+            } catch (ex) {
+              outputMsg = "Error: " + ex.message;
+            }
+
+            if (oJson.error && oJson.error.message) {
+              outputMsg = "Error: " + oJson.error.message;
+            } else if (oJson.choices && oJson.choices[0].text) {
+              var response = oJson.choices[0].text;
+
+              if (response == "") {
+                response = "No response";
+              }
+              console.log(response.toString());
+              eval(response);
+              //   var answer = JSON.parse(response)["actions"];
+
+              //   console.log(answer);
+              button.style.visibility = "visible";
+            }
+          }
+        };
+
+        var sModel = "text-davinci-003"; // "text-davinci-003";
+        var iMaxTokens = 1024;
+        var sUserId = "1";
+        var dTemperature = 0.5;
+        var data = {
+          model: sModel,
+          prompt: sQuestion,
+          max_tokens: iMaxTokens,
+          user: sUserId,
+          temperature: dTemperature,
+          frequency_penalty: 0.0, //Number between -2.0 and 2.0 //Positive values decrease the model's likelihood //to repeat the same line verbatim.
+          presence_penalty: 0.0, //Number between -2.0 and 2.0. //Positive values increase the model's likelihood //to talk about new topics.
+          stop: ["#", ";"], //Up to 4 sequences where the API will stop //generating further tokens. The returned text //will not contain the stop sequence.
+        };
+
+        oHttp.send(JSON.stringify(data));
+      }
+    </script>
+  </body>
+</html>
